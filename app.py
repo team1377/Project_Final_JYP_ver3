@@ -1,8 +1,27 @@
 import streamlit as st
 import folium
 from streamlit_folium import folium_static
+from openai import OpenAI
+import google.generativeai as genai
+import json
+import re
+import logging
 import random
 from PIL import Image
+
+# 로깅 설정
+logging.basicConfig(level=logging.INFO)
+
+# Streamlit secrets에서 OpenAI API 키 가져오기
+OPENAI_API_KEY = st.secrets["OPENAI"]["api_key"]
+GOOGLE_API_KEY = st.secrets["GOOGLE"]["api_key"]
+
+# OpenAI 클라이언트 설정
+openai_client = OpenAI(api_key=OPENAI_API_KEY)
+
+# Google Gemini 설정
+genai.configure(api_key=GOOGLE_API_KEY)
+gemini_model = genai.GenerativeModel('gemini-pro')
 
 # 페이지 설정
 st.set_page_config(page_title="도쿄 맛집 추천 서비스", layout="wide")
@@ -15,7 +34,8 @@ with col1:
 
 # 앱 설명
 st.markdown('<div style="font-size: 14px;">이 앱은 도쿄의 맛집을 추천해주는 서비스입니다.<br>'
-            '원하는 지역과 메뉴를 선택하여 맛집 추천을 받으세요.</div>', unsafe_allow_html=True)
+            '원하는 지역과 메뉴를 선택한 후 \'OpenAI GPT\' 또는 \'Google Gemini\' AI모델을 선택하여 '
+            '맛집 추천을 받으세요.</div>', unsafe_allow_html=True)
 
 # 사이드바 설정
 st.sidebar.header("검색 옵션")
@@ -44,18 +64,108 @@ menus = {
 }
 menu = st.sidebar.selectbox("도쿄 대표 메뉴 선택", list(menus.keys()), key="menu_select")
 
-# 맛집 정보 생성 함수
-def generate_restaurant_info(location, menu):
-    restaurants = [
-        {
-            "name": f"{location} {menu} 맛집 {i}",
-            "rating": round(random.uniform(3.5, 5.0), 1),
-            "reviews": random.randint(10, 500),
-            "address": f"{location} {random.randint(1, 30)}-{random.randint(1, 20)}",
-            "price_range": f"¥{random.randint(1000, 10000)}~¥{random.randint(11000, 30000)}",
-        } for i in range(1, 6)
+# API 선택
+api_choice = st.sidebar.radio("AI 모델 선택", ["OpenAI GPT", "Google Gemini"], key="api_choice_radio")
+
+def extract_json(text):
+    match = re.search(r'\[.*\]', text, re.DOTALL)
+    if match:
+        return match.group()
+    return None
+
+def call_openai_api(location, menu):
+    prompt = f"""tabelog.com 사이트를 기반으로 도쿄의 {location} 지역에 위치한 현재 영업 중인 {menu} 맛집을 추천해주세요. 
+    별점 5점에 가까운 랭킹 1위~5위 맛집을 선정하고, 각 맛집에 대해 다음 정보를 포함해 주세요:
+    - 가게 이름
+    - 별점 (5점 만점)
+    - 리뷰 수
+    - 가게 리뷰 요약
+    - 상세 정보 (특징, 추천 메뉴 등)
+    - 가게 정보 (주소, 전화번호, 영업시간, 가격대)
+    - 추천 이유
+
+    반드시 다음과 같은 유효한 JSON 형식으로 응답해주세요:
+    [
+      {{
+        "name": "레스토랑 이름",
+        "rating": 4.5,
+        "reviews": 100,
+        "review_summary": "리뷰 요약",
+        "details": "상세 정보",
+        "address": "주소",
+        "phone": "전화번호",
+        "hours": "영업시간",
+        "price_range": "가격대",
+        "reason": "추천 이유"
+      }},
+      ...
     ]
-    return restaurants
+    """
+
+    response = openai_client.chat.completions.create(
+        model="gpt-3.5-turbo",
+        messages=[
+            {"role": "system", "content": "당신은 도쿄 레스토랑 추천 전문가입니다."},
+            {"role": "user", "content": prompt}
+        ]
+    )
+    
+    logging.info(f"OpenAI API 원본 응답: {response.choices[0].message.content}")
+    
+    json_str = extract_json(response.choices[0].message.content)
+    if json_str:
+        try:
+            return json.loads(json_str)
+        except json.JSONDecodeError as e:
+            logging.error(f"JSON 파싱 오류: {str(e)}")
+            return None
+    else:
+        logging.error("응답에서 JSON을 찾을 수 없습니다.")
+        return None
+
+def call_gemini_api(location, menu):
+    prompt = f"""tabelog.com 사이트를 기반으로 도쿄의 {location} 지역에 위치한 현재 영업 중인 {menu} 맛집을 추천해주세요. 
+    별점 5점에 가까운 랭킹 1위~5위 맛집을 선정하고, 각 맛집에 대해 다음 정보를 포함해 주세요:
+    - 가게 이름
+    - 별점 (5점 만점)
+    - 리뷰 수
+    - 가게 리뷰 요약
+    - 상세 정보 (특징, 추천 메뉴 등)
+    - 가게 정보 (주소, 전화번호, 영업시간, 가격대)
+    - 추천 이유
+    
+    반드시 다음과 같은 유효한 JSON 형식으로 응답해주세요:
+    [
+      {{
+        "name": "레스토랑 이름",
+        "rating": 4.5,
+        "reviews": 100,
+        "review_summary": "리뷰 요약",
+        "details": "상세 정보",
+        "address": "주소",
+        "phone": "전화번호",
+        "hours": "영업시간",
+        "price_range": "가격대",
+        "reason": "추천 이유"
+      }},
+      ...
+    ]
+    """
+
+    response = gemini_model.generate_content(prompt)
+    
+    logging.info(f"Gemini API 원본 응답: {response.text}")
+    
+    json_str = extract_json(response.text)
+    if json_str:
+        try:
+            return json.loads(json_str)
+        except json.JSONDecodeError as e:
+            logging.error(f"JSON 파싱 오류: {str(e)}")
+            return None
+    else:
+        logging.error("응답에서 JSON을 찾을 수 없습니다.")
+        return None
 
 # 검색 버튼
 if st.sidebar.button("맛집 검색", key="search_button"):
@@ -75,46 +185,65 @@ if st.sidebar.button("맛집 검색", key="search_button"):
     m = folium.Map(location=[lat, lon], zoom_start=15)
     folium.Marker([lat, lon], popup=location, icon=folium.Icon(color='red', icon='info-sign')).add_to(m)
 
-    # 맛집 정보 생성 및 표시
-    restaurants = generate_restaurant_info(location, menu)
-    for restaurant in restaurants:
-        restaurant_lat = lat + random.uniform(-0.005, 0.005)
-        restaurant_lon = lon + random.uniform(-0.005, 0.005)
+    # API 호출 및 결과 표시
+    try:
+        with st.spinner('맛집 정보를 가져오는 중입니다...'):
+            if api_choice == "OpenAI GPT":
+                recommendations = call_openai_api(location, menu)
+            else:
+                recommendations = call_gemini_api(location, menu)
         
-        tooltip_content = f"""
-        <div style="font-size: 14px;">
-        <b>{restaurant['name']}</b><br>
-        평점: {restaurant['rating']}<br>
-        리뷰 수: {restaurant['reviews']}<br>
-        가격대: {restaurant['price_range']}<br>
-        </div>
-        """
+        if recommendations is None or len(recommendations) == 0:
+            st.error("맛집 정보를 가져오는 데 실패했습니다. 다시 시도해 주세요.")
+        else:
+            for restaurant in recommendations:
+                restaurant_lat = lat + random.uniform(-0.005, 0.005)
+                restaurant_lon = lon + random.uniform(-0.005, 0.005)
+                
+                tooltip_content = f"""
+                <div style="font-size: 14px;">
+                <b>{restaurant.get('name', 'Unknown')}</b><br>
+                평점: {restaurant.get('rating', 'N/A')}<br>
+                리뷰 수: {restaurant.get('reviews', 'N/A')}<br>
+                가격대: {restaurant.get('price_range', 'N/A')}<br>
+                </div>
+                """
 
-        popup_content = f"""
-        <div style="font-size: 16px;">
-        <b>{restaurant['name']}</b><br>
-        평점: {restaurant['rating']}<br>
-        리뷰 수: {restaurant['reviews']}<br>
-        주소: {restaurant['address']}<br>
-        가격대: {restaurant['price_range']}<br>
-        </div>
-        """
+                popup_content = f"""
+                <div style="font-size: 16px;">
+                <b>{restaurant.get('name', 'Unknown')}</b><br>
+                평점: {restaurant.get('rating', 'N/A')}<br>
+                리뷰 수: {restaurant.get('reviews', 'N/A')}<br>
+                리뷰 요약: {restaurant.get('review_summary', 'N/A')}<br>
+                주소: {restaurant.get('address', 'N/A')}<br>
+                전화번호: {restaurant.get('phone', 'N/A')}<br>
+                영업시간: {restaurant.get('hours', 'N/A')}<br>
+                가격대: {restaurant.get('price_range', 'N/A')}<br>
+                추천 이유: {restaurant.get('reason', 'N/A')}
+                </div>
+                """
 
-        folium.Marker(
-            [restaurant_lat, restaurant_lon],
-            popup=folium.Popup(popup_content, max_width=300),
-            tooltip=folium.Tooltip(tooltip_content),
-            icon=folium.Icon(color='green', icon='cutlery', prefix='fa')
-        ).add_to(m)
+                folium.Marker(
+                    [restaurant_lat, restaurant_lon],
+                    popup=folium.Popup(popup_content, max_width=300),
+                    tooltip=folium.Tooltip(tooltip_content),
+                    icon=folium.Icon(color='green', icon='cutlery', prefix='fa')
+                ).add_to(m)
 
-    # 지도 표시
-    st.subheader(f"{location}의 {menu} 맛집 지도")
-    folium_static(m, width=800, height=500)
+            # 지도 표시
+            st.subheader(f"{location}의 {menu} 맛집 지도")
+            folium_static(m, width=800, height=500)
 
-    # 맛집 목록 표시
-    st.subheader("추천 맛집 목록")
-    for restaurant in restaurants:
-        st.write(f"**{restaurant['name']}** - 평점: {restaurant['rating']}, 리뷰 수: {restaurant['reviews']}")
+            # 맛집 목록 표시
+            st.subheader("추천 맛집 목록")
+            for restaurant in recommendations:
+                st.write(f"**{restaurant['name']}** - 평점: {restaurant['rating']}, 리뷰 수: {restaurant['reviews']}")
+                st.write(f"주소: {restaurant['address']}")
+                st.write(f"추천 이유: {restaurant['reason']}")
+                st.write("---")
+
+    except Exception as e:
+        st.error(f"오류 발생: {str(e)}")
 
 # 푸터
 st.markdown("---")
