@@ -85,7 +85,7 @@ locations = {
     "아키하바라": "akihabara"
 }
 
-location = st.sidebar.selectbox("도쿄 내 관광지 선택", list(locations.keys()))
+location = st.sidebar.selectbox("도쿄 내 관광지 선택", list(locations.keys()), key="location_select")
 
 # 메뉴 선택
 menus = {
@@ -97,142 +97,31 @@ menus = {
     "소바": "soba",
     "돈카츠": "tonkatsu"
 }
-menu = st.sidebar.selectbox("도쿄 대표 메뉴 선택", list(menus.keys()))
+menu = st.sidebar.selectbox("도쿄 대표 메뉴 선택", list(menus.keys()), key="menu_select")
 
 # API 선택
-api_choice = st.sidebar.radio("AI 모델 선택", ["OpenAI GPT", "Google Gemini"])
+api_choice = st.sidebar.radio("AI 모델 선택", ["OpenAI GPT", "Google Gemini"], key="api_choice_radio")
 
-# 기존 함수들
-def extract_json(text):
-    match = re.search(r'\[.*\]', text, re.DOTALL)
-    if match:
-        return match.group()
-    return None
-
-def call_openai_api(location, menu):
-    prompt = f"""tabelog.com 사이트를 기반으로 도쿄의 {location} 지역에 위치한 현재 영업 중인 {menu} 맛집을 추천해주세요. 
-    별점 5점에 가까운 랭킹 1위~5위 맛집을 선정하고, 각 맛집에 대해 다음 정보를 포함해 주세요:
-    - 가게 이름
-    - 별점 (5점 만점)
-    - 리뷰 수
-    - 가게 리뷰 요약
-    - 상세 정보 (특징, 추천 메뉴 등)
-    - 가게 정보 (주소, 전화번호, 영업시간, 가격대)
-    - 추천 이유
-
-    반드시 다음과 같은 유효한 JSON 형식으로 응답해주세요:
-    [
-      {{
-        "name": "레스토랑 이름",
-        "rating": 4.5,
-        "reviews": 100,
-        "review_summary": "리뷰 요약",
-        "details": "상세 정보",
-        "address": "주소",
-        "phone": "전화번호",
-        "hours": "영업시간",
-        "price_range": "가격대",
-        "reason": "추천 이유"
-      }},
-      ...
-    ]
-    """
-
-    response = openai_client.chat.completions.create(
-        model="gpt-3.5-turbo",
-        messages=[
-            {"role": "system", "content": "당신은 도쿄 레스토랑 추천 전문가입니다."},
-            {"role": "user", "content": prompt}
-        ]
-    )
-    
-    logging.info(f"OpenAI API 원본 응답: {response.choices[0].message.content}")
-    
-    json_str = extract_json(response.choices[0].message.content)
-    if json_str:
-        try:
-            return json.loads(json_str)
-        except json.JSONDecodeError as e:
-            logging.error(f"JSON 파싱 오류: {str(e)}")
-            return None
-    else:
-        logging.error("응답에서 JSON을 찾을 수 없습니다.")
-        return None
-
-def call_gemini_api(location, menu):
-    prompt = f"""tabelog.com 사이트를 기반으로 도쿄의 {location} 지역에 위치한 현재 영업 중인 {menu} 맛집을 추천해주세요. 
-    별점 5점에 가까운 랭킹 1위~5위 맛집을 선정하고, 각 맛집에 대해 다음 정보를 포함해 주세요:
-    - 가게 이름
-    - 별점 (5점 만점)
-    - 리뷰 수
-    - 가게 리뷰 요약
-    - 상세 정보 (특징, 추천 메뉴 등)
-    - 가게 정보 (주소, 전화번호, 영업시간, 가격대)
-    - 추천 이유
-    
-    반드시 다음과 같은 유효한 JSON 형식으로 응답해주세요:
-    [
-      {{
-        "name": "레스토랑 이름",
-        "rating": 4.5,
-        "reviews": 100,
-        "review_summary": "리뷰 요약",
-        "details": "상세 정보",
-        "address": "주소",
-        "phone": "전화번호",
-        "hours": "영업시간",
-        "price_range": "가격대",
-        "reason": "추천 이유"
-      }},
-      ...
-    ]
-    """
-
-    response = gemini_model.generate_content(prompt)
-    
-    logging.info(f"Gemini API 원본 응답: {response.text}")
-    
-    json_str = extract_json(response.text)
-    if json_str:
-        try:
-            return json.loads(json_str)
-        except json.JSONDecodeError as e:
-            logging.error(f"JSON 파싱 오류: {str(e)}")
-            return None
-    else:
-        logging.error("응답에서 JSON을 찾을 수 없습니다.")
-        return None
-
-# 새로운 기능: 데이터베이스에서 레스토랑 정보 가져오기
-def get_restaurants_from_db(location, menu):
-    db = RestaurantDatabase('tokyo_restaurants.db')
-    restaurants = db.get_restaurants_by_location_and_menu(location, menu)
-    db.close()
-    return restaurants
-
-# 새로운 기능: 데이터 시각화
-def visualize_restaurant_data():
-    visualizer = RestaurantVisualizer('tokyo_restaurants.db')
-    fig = visualizer.visualize_data()
-    visualizer.close()
-    return fig
-
-# 메인 앱 로직 (이전 코드와 동일)
-if st.sidebar.button("맛집 검색"):
+# 검색 버튼
+if st.sidebar.button("맛집 검색", key="search_button"):
     # 지도 표시
     latitudes = {
         "신주쿠": 35.6938,
         "시부야": 35.6580,
         "긴자": 35.6721,
         "롯폰기": 35.6628,
-        "우에노": 35.7089
+        "우에노": 35.7089,
+        "아사쿠사": 35.7147,
+        "아키하바라": 35.7022
     }
     longitudes = {
         "신주쿠": 139.7034,
         "시부야": 139.7016,
         "긴자": 139.7666,
         "롯폰기": 139.7315,
-        "우에노": 139.7741
+        "우에노": 139.7741,
+        "아사쿠사": 139.7967,
+        "아키하바라": 139.7741
     }
 
     lat, lon = latitudes[location], longitudes[location]
