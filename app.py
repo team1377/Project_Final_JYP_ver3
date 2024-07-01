@@ -9,6 +9,7 @@ import logging
 import random
 from PIL import Image
 from folium.plugins import MarkerCluster
+import base64
 
 # 로깅 설정
 logging.basicConfig(level=logging.INFO)
@@ -173,6 +174,42 @@ def call_gemini_api(location, menu):
         logging.error("응답에서 JSON을 찾을 수 없습니다.")
         return None
 
+# SNS 공유 URL 생성 함수
+def get_sns_share_urls(restaurant_name, restaurant_url):
+    encoded_name = base64.b64encode(restaurant_name.encode('utf-8')).decode('utf-8')
+    encoded_url = base64.b64encode(restaurant_url.encode('utf-8')).decode('utf-8')
+    return {
+        'twitter': f"https://twitter.com/intent/tweet?text={encoded_name}&url={encoded_url}",
+        'facebook': f"https://www.facebook.com/sharer/sharer.php?u={encoded_url}",
+        'instagram': f"https://www.instagram.com/"  # Instagram은 직접 공유 URL이 없으므로 기본 페이지로 연결
+    }
+
+# 팝업 내용 생성 함수
+def create_popup_content(idx, restaurant):
+    share_urls = get_sns_share_urls(restaurant['name'], "http://localhost:8501")  # 로컬 서버 주소
+    return f"""
+    <div style="font-size: 16px; font-family: Arial, sans-serif;">
+        <h3>{idx}. {restaurant['name']}</h3>
+        <p><strong>평점:</strong> {restaurant['rating']} ⭐ ({restaurant['reviews']} 리뷰)</p>
+        <p><strong>주소:</strong> {restaurant['address']}</p>
+        <p><strong>전화번호:</strong> {restaurant['phone']}</p>
+        <p><strong>영업시간:</strong> {restaurant['hours']}</p>
+        <p><strong>가격대:</strong> {restaurant['price_range']}</p>
+        <p><strong>추천 이유:</strong> {restaurant['reason']}</p>
+        <p><strong>공유하기:</strong></p>
+        <a href="{share_urls['twitter']}" target="_blank" style="margin-right: 10px;">
+            <img src="https://img.icons8.com/color/48/000000/twitter.png" width="30" height="30" alt="Twitter">
+        </a>
+        <a href="{share_urls['facebook']}" target="_blank" style="margin-right: 10px;">
+            <img src="https://img.icons8.com/color/48/000000/facebook-new.png" width="30" height="30" alt="Facebook">
+        </a>
+        <a href="{share_urls['instagram']}" target="_blank">
+            <img src="https://img.icons8.com/color/48/000000/instagram-new.png" width="30" height="30" alt="Instagram">
+        </a>
+        <p><small>* SNS 공유 기능은 로컬 환경에서 제한될 수 있습니다.</small></p>
+    </div>
+    """
+
 # 검색 버튼
 if st.sidebar.button("맛집 검색", key="search_button"):
     # 지도 표시
@@ -202,53 +239,22 @@ if st.sidebar.button("맛집 검색", key="search_button"):
         if recommendations is None or len(recommendations) == 0:
             st.error("맛집 정보를 가져오는 데 실패했습니다. 다시 시도해 주세요.")
         else:
-            for restaurant in recommendations:
+            for idx, restaurant in enumerate(recommendations, 1):
                 restaurant_lat = lat + random.uniform(-0.005, 0.005)
                 restaurant_lon = lon + random.uniform(-0.005, 0.005)
                 
-                tooltip_content = f"""
-                <div style="font-size: 14px;">
-                <b>{restaurant.get('name', 'Unknown')}</b><br>
-                평점: {restaurant.get('rating', 'N/A')}<br>
-                리뷰 수: {restaurant.get('reviews', 'N/A')}<br>
-                가격대: {restaurant.get('price_range', 'N/A')}<br>
-                </div>
-                """
-
-                popup_content = f"""
-                <div style="font-size: 16px;">
-                <b>{restaurant.get('name', 'Unknown')}</b><br>
-                평점: {restaurant.get('rating', 'N/A')}<br>
-                리뷰 수: {restaurant.get('reviews', 'N/A')}<br>
-                리뷰 요약: {restaurant.get('review_summary', 'N/A')}<br>
-                주소: {restaurant.get('address', 'N/A')}<br>
-                전화번호: {restaurant.get('phone', 'N/A')}<br>
-                영업시간: {restaurant.get('hours', 'N/A')}<br>
-                가격대: {restaurant.get('price_range', 'N/A')}<br>
-                추천 이유: {restaurant.get('reason', 'N/A')}
-                <a href="{restaurant.get('share_url', '#')}" target="_blank">SNS에서 공유하기</a>
-                </div>
-                """
+                popup_content = create_popup_content(idx, restaurant)
 
                 folium.Marker(
                     [restaurant_lat, restaurant_lon],
                     popup=folium.Popup(popup_content, max_width=300),
-                    tooltip=folium.Tooltip(tooltip_content),
+                    tooltip=f"{idx}. {restaurant['name']}",
                     icon=folium.Icon(color='green', icon='cutlery', prefix='fa')
                 ).add_to(m)
 
             # 지도 표시
             st.subheader(f"{location}의 {menu} 맛집 지도")
             folium_static(m, width=800, height=500)
-
-            # 맛집 목록 표시
-            st.subheader("추천 맛집 TOP 5")
-            for idx, restaurant in enumerate(recommendations, 1):
-                st.write(f"{idx}. **{restaurant['name']}** - 평점: {restaurant['rating']}, 리뷰 수: {restaurant['reviews']}")
-                st.write(f"주소: {restaurant['address']}")
-                st.write(f"추천 이유: {restaurant['reason']}")
-                st.write(f"[SNS에서 공유하기]({restaurant['share_url']})")
-                st.write("---")
 
     except Exception as e:
         st.error(f"오류 발생: {str(e)}")
