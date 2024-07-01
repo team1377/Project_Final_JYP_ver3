@@ -195,85 +195,99 @@ if st.sidebar.button("맛집 검색", key="search_button"):
     st.pyplot(fig)
 
 # 데이터 업데이트 기능 (관리자용)
-if st.sidebar.checkbox("관리자 모드"):
-    st.sidebar.subheader("데이터 업데이트")
-    if st.sidebar.button("데이터 업데이트 실행"):
-        with st.spinner("데이터 업데이트 중..."):
-            try:
-                # 스크래핑
-                scraper = TabelogScraper()
-                for location in locations.values():
-                    for menu in menus.values():
-                        restaurants = scraper.scrape_area(location, menu, num_pages=2)
-                        scraper.save_to_json(restaurants, f'latest_{location}_{menu}_restaurants.json')
+if st.sidebar.checkbox("관리자 모드", key="admin_mode_checkbox"):
+    st.sidebar.subheader("데이터 관리")
+    
+    if st.sidebar.button("데이터 업데이트", key="update_data_button"):
+        # 여기서는 실제 데이터 업데이트 대신 메시지만 표시합니다
+        st.sidebar.success("데이터 업데이트가 시뮬레이션되었습니다.")
+    
+    # 간단한 통계 표시
+    st.sidebar.subheader("간단한 통계")
+    st.sidebar.write(f"등록된 지역 수: {len(locations)}")
+    st.sidebar.write(f"등록된 메뉴 수: {len(menus)}")
 
-                # 데이터 통합
-                integrator = RestaurantDataIntegrator()
-                for location in locations.values():
-                    for menu in menus.values():
-                        integrator.load_data(f'latest_{location}_{menu}_restaurants.json')
-                integrator.deduplicate()
-                integrator.merge_data()
-                integrator.save_integrated_data('integrated_tokyo_restaurants.json')
-
-                # 데이터베이스 업데이트
-                db = RestaurantDatabase('tokyo_restaurants.db')
-                db.load_from_json('integrated_tokyo_restaurants.json')
-                db.close()
-
-                st.sidebar.success("데이터 업데이트가 완료되었습니다.")
-            except Exception as e:
-                st.sidebar.error(f"데이터 업데이트 중 오류 발생: {str(e)}")
-
-    # 데이터베이스 통계
-    st.sidebar.subheader("데이터베이스 통계")
-    db = RestaurantDatabase('tokyo_restaurants.db')
-    total_restaurants = db.get_total_restaurants()
+    # 가상의 레스토랑 데이터 통계
+    total_restaurants = random.randint(50, 200)  # 임의의 레스토랑 수
     st.sidebar.write(f"총 레스토랑 수: {total_restaurants}")
-    db.close()
 
-# 메인 앱 로직
-if st.sidebar.button("맛집 검색"):
-    # 맛집 검색 관련 코드
-    # (이 부분의 코드는 그대로 유지)
-    ...
-    
-# 추가 기능: 전체 데이터 통계
-if st.checkbox("전체 데이터 통계 보기"):
-    st.subheader("도쿄 레스토랑 전체 통계")
-    
-    # 데이터베이스에서 통계 정보 가져오기
-    db = RestaurantDatabase('tokyo_restaurants.db')
-    stats = db.get_restaurant_stats()
-    total_restaurants = db.get_total_restaurants()
-    location_dist = db.get_location_distribution()
-    menu_dist = db.get_menu_distribution()
-    db.close()
+# 메인 앱 로직 (이전 코드와 동일)
+if st.sidebar.button("맛집 검색", key="search_button"):
+    # 지도 표시
+    latitudes = {
+        "신주쿠": 35.6938,
+        "시부야": 35.6580,
+        "긴자": 35.6721,
+        "롯폰기": 35.6628,
+        "우에노": 35.7089,
+        "아사쿠사": 35.7147,
+        "아키하바라": 35.7022
+    }
+    longitudes = {
+        "신주쿠": 139.7034,
+        "시부야": 139.7016,
+        "긴자": 139.7666,
+        "롯폰기": 139.7315,
+        "우에노": 139.7741,
+        "아사쿠사": 139.7967,
+        "아키하바라": 139.7741
+    }
 
-    # 통계 정보 표시
-    col1, col2, col3 = st.columns(3)
-    with col1:
-        st.metric("총 레스토랑 수", total_restaurants)
-    with col2:
-        st.metric("평균 평점", f"{stats['avg_rating']:.2f}")
-    with col3:
-        st.metric("평균 리뷰 수", f"{stats['avg_reviews']:.0f}")
+    lat, lon = latitudes[location], longitudes[location]
 
-    # 지역별 레스토랑 분포
-    st.subheader("지역별 레스토랑 분포")
-    fig, ax = plt.subplots()
-    ax.bar(location_dist.keys(), location_dist.values())
-    ax.set_xlabel("지역")
-    ax.set_ylabel("레스토랑 수")
-    ax.set_title("지역별 레스토랑 분포")
-    st.pyplot(fig)
+    m = folium.Map(location=[lat, lon], zoom_start=15)
+    folium.Marker([lat, lon], popup=location, icon=folium.Icon(color='red', icon='info-sign')).add_to(m)
 
-    # 메뉴별 레스토랑 분포
-    st.subheader("메뉴별 레스토랑 분포")
-    fig, ax = plt.subplots()
-    ax.pie(menu_dist.values(), labels=menu_dist.keys(), autopct='%1.1f%%')
-    ax.set_title("메뉴별 레스토랑 분포")
-    st.pyplot(fig)
+    # 가상의 맛집 데이터 생성 (API 호출 대신)
+    recommendations = [
+        {
+            "name": f"{location} {menu} 맛집 {i}",
+            "rating": round(random.uniform(3.5, 5.0), 1),
+            "reviews": random.randint(10, 500),
+            "address": f"{location} {i}번지",
+            "price_range": f"¥{random.randint(1000, 10000)}~"
+        } for i in range(1, 6)
+    ]
+
+    # 맛집 정보 표시 및 지도에 마커 추가
+    for restaurant in recommendations:
+        restaurant_lat = lat + random.uniform(-0.005, 0.005)
+        restaurant_lon = lon + random.uniform(-0.005, 0.005)
+        
+        tooltip_content = f"""
+        <div style="font-size: 14px;">
+        <b>{restaurant['name']}</b><br>
+        평점: {restaurant['rating']}<br>
+        리뷰 수: {restaurant['reviews']}<br>
+        가격대: {restaurant['price_range']}<br>
+        </div>
+        """
+
+        popup_content = f"""
+        <div style="font-size: 16px;">
+        <b>{restaurant['name']}</b><br>
+        평점: {restaurant['rating']}<br>
+        리뷰 수: {restaurant['reviews']}<br>
+        주소: {restaurant['address']}<br>
+        가격대: {restaurant['price_range']}<br>
+        </div>
+        """
+
+        folium.Marker(
+            [restaurant_lat, restaurant_lon],
+            popup=folium.Popup(popup_content, max_width=300),
+            tooltip=folium.Tooltip(tooltip_content),
+            icon=folium.Icon(color='green', icon='cutlery', prefix='fa')
+        ).add_to(m)
+
+    # 지도 표시
+    st.subheader(f"{location}의 {menu} 맛집 지도")
+    folium_static(m, width=800, height=500)
+
+    # 맛집 목록 표시
+    st.subheader("추천 맛집 목록")
+    for restaurant in recommendations:
+        st.write(f"**{restaurant['name']}** - 평점: {restaurant['rating']}, 리뷰 수: {restaurant['reviews']}")
 
 # 푸터
 st.markdown("---")
