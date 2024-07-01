@@ -7,7 +7,6 @@ Pillow
 matplotlib
 requests
 beautifulsoup4
-SQLite3
 python-dotenv
 numpy
 pandas
