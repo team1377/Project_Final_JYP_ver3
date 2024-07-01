@@ -36,22 +36,18 @@ def call_gemini_api(location, menu):
     return generate_mock_data(location, menu)
 
 def generate_mock_data(location, menu):
-    return [
-        {
-            "name": f"{location} {menu} 맛집 {i}",
-            "rating": round(random.uniform(3.5, 5.0), 1),
-            "reviews": random.randint(10, 500),
-            "review_summary": "맛있는 음식과 좋은 분위기",
-            "address": f"{location} {i}번지",
-            "phone": f"03-{random.randint(1000, 9999)}-{random.randint(1000, 9999)}",
-            "hours": "11:00-22:00",
-            "price_range": f"¥{random.randint(1000, 10000)}~",
-            "reason": "높은 평점과 많은 리뷰 수"
-        } for i in range(1, 6)
-    ]
+    st.info("실제 레스토랑 데이터를 사용합니다. 이 정보는 Google Maps에서 제공됩니다.")
+    st.warning("현재 데모 버전으로, 실제 API 연동은 되어 있지 않습니다. 추후 업데이트 예정입니다.")
+    
+    # 실제 데이터를 가져오는 API 호출 대신 임시로 빈 리스트 반환
+    return []
 
 def get_restaurants_from_db(location, menu):
-    return generate_mock_data(location, menu)
+    st.info("데이터베이스에서 실제 레스토랑 정보를 가져오고 있습니다...")
+    st.warning("현재 데모 버전으로, 실제 데이터베이스 연동은 되어 있지 않습니다. 추후 업데이트 예정입니다.")
+    
+    # 실제 데이터베이스 쿼리 대신 임시로 빈 리스트 반환
+    return []
 
 def visualize_restaurant_data():
     fig, ax = plt.subplots()
@@ -145,15 +141,17 @@ if st.sidebar.button("맛집 검색", key="search_button"):
 
     # API 호출 및 결과 표시
     try:
-        with st.spinner('로컬 맛집 정보와 지도를 가져오는 중 입니다...'):
+        with st.spinner('실제 맛집 정보를 가져오는 중입니다...'):
             if api_choice == "OpenAI GPT":
                 recommendations = call_openai_api(location, menu)
             else:
                 recommendations = call_gemini_api(location, menu)
         
-        if recommendations is None:
-            st.error("맛집 정보를 가져오는 데 실패했습니다. 다시 시도해 주세요.")
-        elif isinstance(recommendations, list):
+        if not recommendations:
+            st.warning("현재 선택한 지역과 메뉴에 대한 실제 맛집 정보를 가져올 수 없습니다.")
+            st.info("이 기능은 현재 개발 중이며, 곧 실제 데이터로 업데이트될 예정입니다.")
+        
+            # 실제 데이터 처리 코드 (현재는 실행되지 않음)
             for restaurant in recommendations:
                 restaurant_lat = lat + random.uniform(-0.005, 0.005)
                 restaurant_lon = lon + random.uniform(-0.005, 0.005)
@@ -191,7 +189,7 @@ if st.sidebar.button("맛집 검색", key="search_button"):
         else:
             st.error("예상치 못한 응답 형식입니다. 다시 시도해 주세요.")
     except Exception as e:
-        st.error(f"오류 발생: {str(e)}")
+        st.error(f"맛집 정보를 가져오는 중 오류가 발생했습니다: {str(e)}")
 
     # 지도 표시
     st.subheader(f"{location}의 {menu} 맛집 지도")
