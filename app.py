@@ -8,6 +8,7 @@ import re
 import logging
 import random
 from PIL import Image
+from folium.plugins import MarkerCluster
 
 # 로깅 설정
 logging.basicConfig(level=logging.INFO)
@@ -73,6 +74,7 @@ def extract_json(text):
         return match.group()
     return None
 
+# call_openai_api와 call_gemini_api 함수 내의 프롬프트 수정
 def call_openai_api(location, menu):
     prompt = f"""tabelog.com 사이트를 기반으로 도쿄의 {location} 지역에 위치한 현재 영업 중인 {menu} 맛집을 추천해주세요. 
     별점 5점에 가까운 랭킹 1위~5위 맛집을 선정하고, 각 맛집에 대해 다음 정보를 포함해 주세요:
@@ -83,8 +85,9 @@ def call_openai_api(location, menu):
     - 상세 정보 (특징, 추천 메뉴 등)
     - 가게 정보 (주소, 전화번호, 영업시간, 가격대)
     - 추천 이유
+    - SNS 공유 URL (가상의 URL로 대체)
 
-    반드시 다음과 같은 유효한 JSON 형식으로 응답해주세요:
+    반드시 5개의 맛집을 추천하고, 다음과 같은 유효한 JSON 형식으로 응답해주세요:
     [
       {{
         "name": "레스토랑 이름",
@@ -96,7 +99,8 @@ def call_openai_api(location, menu):
         "phone": "전화번호",
         "hours": "영업시간",
         "price_range": "가격대",
-        "reason": "추천 이유"
+        "reason": "추천 이유",
+        "share_url": "https://example.com/share/restaurant_name"
       }},
       ...
     ]
@@ -133,8 +137,9 @@ def call_gemini_api(location, menu):
     - 상세 정보 (특징, 추천 메뉴 등)
     - 가게 정보 (주소, 전화번호, 영업시간, 가격대)
     - 추천 이유
-    
-    반드시 다음과 같은 유효한 JSON 형식으로 응답해주세요:
+    - SNS 공유 URL (가상의 URL로 대체)
+
+    반드시 5개의 맛집을 추천하고, 다음과 같은 유효한 JSON 형식으로 응답해주세요:
     [
       {{
         "name": "레스토랑 이름",
@@ -146,7 +151,8 @@ def call_gemini_api(location, menu):
         "phone": "전화번호",
         "hours": "영업시간",
         "price_range": "가격대",
-        "reason": "추천 이유"
+        "reason": "추천 이유",
+        "share_url": "https://example.com/share/restaurant_name"
       }},
       ...
     ]
@@ -220,6 +226,7 @@ if st.sidebar.button("맛집 검색", key="search_button"):
                 영업시간: {restaurant.get('hours', 'N/A')}<br>
                 가격대: {restaurant.get('price_range', 'N/A')}<br>
                 추천 이유: {restaurant.get('reason', 'N/A')}
+                <a href="{restaurant.get('share_url', '#')}" target="_blank">SNS에서 공유하기</a>
                 </div>
                 """
 
@@ -235,11 +242,12 @@ if st.sidebar.button("맛집 검색", key="search_button"):
             folium_static(m, width=800, height=500)
 
             # 맛집 목록 표시
-            st.subheader("추천 맛집 목록")
-            for restaurant in recommendations:
-                st.write(f"**{restaurant['name']}** - 평점: {restaurant['rating']}, 리뷰 수: {restaurant['reviews']}")
+            st.subheader("추천 맛집 TOP 5")
+            for idx, restaurant in enumerate(recommendations, 1):
+                st.write(f"{idx}. **{restaurant['name']}** - 평점: {restaurant['rating']}, 리뷰 수: {restaurant['reviews']}")
                 st.write(f"주소: {restaurant['address']}")
                 st.write(f"추천 이유: {restaurant['reason']}")
+                st.write(f"[SNS에서 공유하기]({restaurant['share_url']})")
                 st.write("---")
 
     except Exception as e:
