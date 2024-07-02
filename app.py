@@ -216,6 +216,7 @@ if st.sidebar.button("맛집 검색", key="search_button"):
     folium.Marker([lat, lon], popup=location, icon=folium.Icon(color='red', icon='info-sign')).add_to(m)
 
     # API 호출 및 결과 표시
+    # API 호출 및 결과 표시
     try:
         with st.spinner('로컬 맛집 정보와 지도를 가져오는 중 입니다...'):
             if api_choice == "OpenAI GPT":
@@ -230,30 +231,31 @@ if st.sidebar.button("맛집 검색", key="search_button"):
                 restaurant_lat = lat + random.uniform(-0.005, 0.005)
                 restaurant_lon = lon + random.uniform(-0.005, 0.005)
                 
-popup_content = f"""
-<div style="font-size: 16px; width: 300px;">
-    <h3>{restaurant.get('name', 'Unknown')}</h3>
-    <p>평점: {restaurant.get('rating', 'N/A')} (리뷰 {restaurant.get('reviews', 'N/A')}개)</p>
-    <p>리뷰 요약: {restaurant.get('review_summary', 'N/A')}</p>
-    <p>주소: {restaurant.get('address', 'N/A')}</p>
-    <p>전화번호: {restaurant.get('phone', 'N/A')}</p>
-    <p>영업시간: {restaurant.get('hours', 'N/A')}</p>
-    <p>가격대: {restaurant.get('price_range', 'N/A')}</p>
-    <p>추천 이유: {restaurant.get('reason', 'N/A')}</p>
-    <p><a href="https://tabelog.com/tokyo/A1301/A130101/13019285/" target="_blank">음식점 사이트 방문</a></p>
-    <div class="sns-share">
-        <a href="#" class="facebook" onclick="shareOnFacebook('{restaurant.get('name', 'Unknown')}'); return false;">
-            <i class="fab fa-facebook-f"></i>
-        </a>
-        <a href="#" class="twitter" onclick="shareOnTwitter('{restaurant.get('name', 'Unknown')}'); return false;">
-            <i class="fab fa-twitter"></i>
-        </a>
-        <a href="#" class="instagram" onclick="shareOnInstagram('{restaurant.get('name', 'Unknown')}'); return false;">
-            <i class="fab fa-instagram"></i>
-        </a>
-    </div>
-</div>
-"""
+                # 팝업 내용 생성 (클릭 시 표시될 상세 정보)
+                popup_content = f"""
+                <div style="font-size: 16px; width: 300px;">
+                    <h3>{restaurant.get('name', 'Unknown')}</h3>
+                    <p>평점: {restaurant.get('rating', 'N/A')} (리뷰 {restaurant.get('reviews', 'N/A')}개)</p>
+                    <p>리뷰 요약: {restaurant.get('review_summary', 'N/A')}</p>
+                    <p>주소: {restaurant.get('address', 'N/A')}</p>
+                    <p>전화번호: {restaurant.get('phone', 'N/A')}</p>
+                    <p>영업시간: {restaurant.get('hours', 'N/A')}</p>
+                    <p>가격대: {restaurant.get('price_range', 'N/A')}</p>
+                    <p>추천 이유: {restaurant.get('reason', 'N/A')}</p>
+                    <p><a href="https://tabelog.com/tokyo/A1301/A130101/13019285/" target="_blank">음식점 사이트 방문</a></p>
+                    <div class="sns-share">
+                        <a href="#" class="facebook" onclick="shareOnFacebook('{restaurant.get('name', 'Unknown')}'); return false;">
+                            <i class="fab fa-facebook-f"></i>
+                        </a>
+                        <a href="#" class="twitter" onclick="shareOnTwitter('{restaurant.get('name', 'Unknown')}'); return false;">
+                            <i class="fab fa-twitter"></i>
+                        </a>
+                        <a href="#" class="instagram" onclick="shareOnInstagram('{restaurant.get('name', 'Unknown')}'); return false;">
+                            <i class="fab fa-instagram"></i>
+                        </a>
+                    </div>
+                </div>
+                """
 
                 folium.Marker(
                     [restaurant_lat, restaurant_lon],
