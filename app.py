@@ -137,7 +137,8 @@ def get_share_urls(restaurant_name, location, menu):
     url = urllib.parse.quote(base_url)
     return {
         "instagram": f"https://www.instagram.com/"  # Instagram은 직접 공유 URL을 제공하지 않습니다
-        "twitter": f"https://twitter.com/intent/tweet?text={text}&url={url}",
+       # "twitter": f"https://twitter.com/intent/tweet?text={text}&url={url}",
+        'twitter': f"https://twitter.com/intent/tweet?text={encoded_name}&url={encoded_url}",
         "facebook": f"https://www.facebook.com/sharer/sharer.php?u={url}",
     }
 
