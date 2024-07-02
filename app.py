@@ -157,18 +157,18 @@ def create_popup_content(restaurant, location, menu):
         <p style="color: #4a4a4a; margin-bottom: 5px;"><strong>전화번호:</strong> {restaurant.get('phone', 'N/A')}</p>
         <p style="color: #4a4a4a; margin-bottom: 5px;"><strong>영업시간:</strong> {restaurant.get('hours', 'N/A')}</p>
         <p style="color: #4a4a4a; margin-bottom: 5px;"><strong>가격대:</strong> {restaurant.get('price_range', 'N/A')}</p>
-        <p style="margin-bottom: 10px;">
+        <p style="margin-bottom: 15px;">
             <a href="{restaurant.get('website', 'https://tabelog.com/tokyo/')}" target="_blank" style="color: #007bff; text-decoration: none;">음식점 사이트 방문</a>
         </p>
-        <div style="display: flex; justify-content: space-between; margin-top: 10px;">
-            <a href="{share_urls['twitter']}" target="_blank" style="color: #1DA1F2; text-decoration: none;">
-                <img src="https://img.icons8.com/color/48/000000/twitter.png" width="30" height="30" alt="Twitter">
+        <div style="display: flex; justify-content: center; align-items: center; margin-top: 15px;">
+            <a href="{share_urls['twitter']}" target="_blank" style="color: #1DA1F2; text-decoration: none; margin: 0 10px;">
+                <img src="https://img.icons8.com/color/48/000000/twitter.png" width="40" height="40" alt="Twitter">
             </a>
-            <a href="{share_urls['facebook']}" target="_blank" style="color: #4267B2; text-decoration: none;">
-                <img src="https://img.icons8.com/color/48/000000/facebook-new.png" width="30" height="30" alt="Facebook">
+            <a href="{share_urls['facebook']}" target="_blank" style="color: #4267B2; text-decoration: none; margin: 0 10px;">
+                <img src="https://img.icons8.com/color/48/000000/facebook-new.png" width="40" height="40" alt="Facebook">
             </a>
-            <a href="#" onclick="alert('Instagram에 공유하려면 이 페이지의 URL을 복사하여 Instagram 앱에서 공유해주세요.'); return false;" style="color: #C13584; text-decoration: none;">
-                <img src="https://img.icons8.com/color/48/000000/instagram-new.png" width="30" height="30" alt="Instagram">
+            <a href="#" onclick="alert('Instagram에 공유하려면 이 페이지의 URL을 복사하여 Instagram 앱에서 공유해주세요.'); return false;" style="color: #C13584; text-decoration: none; margin: 0 10px;">
+                <img src="https://img.icons8.com/color/48/000000/instagram-new.png" width="40" height="40" alt="Instagram">
             </a>
         </div>
     </div>
