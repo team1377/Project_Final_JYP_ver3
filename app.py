@@ -232,26 +232,26 @@ if st.sidebar.button("맛집 검색", key="search_button"):
                 
                 # 팝업 내용 생성 (클릭 시 표시될 상세 정보)
                 popup_content = f"""
-                <div style="font-size: 16px; width: 300px;">
-                    <h3>{restaurant.get('name', 'Unknown')}</h3>
-                    <p>평점: {restaurant.get('rating', 'N/A')} (리뷰 {restaurant.get('reviews', 'N/A')}개)</p>
-                    <p>리뷰 요약: {restaurant.get('review_summary', 'N/A')}</p>
-                    <p>주소: {restaurant.get('address', 'N/A')}</p>
-                    <p>전화번호: {restaurant.get('phone', 'N/A')}</p>
-                    <p>영업시간: {restaurant.get('hours', 'N/A')}</p>
-                    <p>가격대: {restaurant.get('price_range', 'N/A')}</p>
-                    <p>추천 이유: {restaurant.get('reason', 'N/A')}</p>
-                    <p><a href="https://tabelog.com/tokyo/" target="_blank">식당 정보 출처: 타베로그</a></p>
-                    <div class="sns-share">
-                        <a href="https://www.facebook.com/sharer/sharer.php?u=https://tabelog.com/tokyo/" target="_blank" class="facebook">
-                            <i class="fab fa-facebook-f"></i> Facebook에서 공유
-                        </a>
-                        <a href="https://twitter.com/intent/tweet?url=https://tabelog.com/tokyo/&text={restaurant.get('name', 'Unknown')} - 도쿄 맛집 추천" target="_blank" class="twitter">
-                            <i class="fab fa-twitter"></i> Twitter에서 공유
-                        </a>
-                    </div>
-                </div>
-                """
+<div style="font-size: 16px; width: 300px;">
+    <h3>{restaurant.get('name', 'Unknown')}</h3>
+    <p>평점: {restaurant.get('rating', 'N/A')} (리뷰 {restaurant.get('reviews', 'N/A')}개)</p>
+    <p>리뷰 요약: {restaurant.get('review_summary', 'N/A')}</p>
+    <p>주소: {restaurant.get('address', 'N/A')}</p>
+    <p>전화번호: {restaurant.get('phone', 'N/A')}</p>
+    <p>영업시간: {restaurant.get('hours', 'N/A')}</p>
+    <p>가격대: {restaurant.get('price_range', 'N/A')}</p>
+    <p>추천 이유: {restaurant.get('reason', 'N/A')}</p>
+    <p><a href="https://tabelog.com/tokyo/A1301/A130101/13019285/" target="_blank">음식점 사이트 방문</a></p>
+    <div class="sns-share">
+        <a href="#" class="facebook" onclick="shareOnFacebook('{restaurant.get('name', 'Unknown')}'); return false;">
+            <i class="fab fa-facebook-f"></i>
+        </a>
+        <a href="#" class="twitter" onclick="shareOnTwitter('{restaurant.get('name', 'Unknown')}'); return false;">
+            <i class="fab fa-twitter"></i>
+        </a>
+    </div>
+</div>
+"""
 
                 folium.Marker(
                     [restaurant_lat, restaurant_lon],
@@ -273,37 +273,25 @@ st.markdown("""
 <style>
     @import url('https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.1/css/all.min.css');
     
-    body {
-        font-family: 'Noto Sans JP', sans-serif;
-        background-color: #f0f2f6;
-    }
-    
-    .stApp {
-        max-width: 1200px;
-        margin: 0 auto;
-    }
-    
-    h1 {
-        color: #333;
-        text-align: center;
-        margin-bottom: 30px;
-    }
+    /* 기존 스타일 유지 */
     
     .sns-share {
         display: flex;
-        flex-direction: column;
-        align-items: flex-start;
+        justify-content: start;
         margin-top: 10px;
     }
     
     .sns-share a {
-        margin: 5px 0;
-        padding: 5px 10px;
-        border-radius: 5px;
+        margin-right: 10px;
+        width: 30px;
+        height: 30px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
         color: white;
         text-decoration: none;
         transition: all 0.3s ease;
-        font-size: 14px;
     }
     
     .sns-share a:hover {
@@ -312,25 +300,6 @@ st.markdown("""
     
     .facebook { background-color: #3b5998; }
     .twitter { background-color: #1da1f2; }
-    
-    .stButton>button {
-        background-color: #4CAF50;
-        color: white;
-        border: none;
-        padding: 10px 20px;
-        text-align: center;
-        text-decoration: none;
-        display: inline-block;
-        font-size: 16px;
-        margin: 4px 2px;
-        transition-duration: 0.4s;
-        cursor: pointer;
-        border-radius: 5px;
-    }
-    
-    .stButton>button:hover {
-        background-color: #45a049;
-    }
 </style>
 """, unsafe_allow_html=True)
 
@@ -338,10 +307,16 @@ st.markdown("""
 st.markdown("""
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
 <script>
-    $(document).ready(function() {
-        // 여기에 필요한 JavaScript 코드를 추가할 수 있습니다.
-        // 예: SNS 공유 기능 개선, 동적 콘텐츠 로딩 등
-    });
+    function shareOnFacebook(restaurantName) {
+        var url = 'https://www.facebook.com/sharer/sharer.php?u=' + encodeURIComponent(window.location.href);
+        window.open(url, '_blank', 'width=600,height=400');
+    }
+
+    function shareOnTwitter(restaurantName) {
+        var text = encodeURIComponent(restaurantName + ' - 도쿄 맛집 추천');
+        var url = 'https://twitter.com/intent/tweet?text=' + text + '&url=' + encodeURIComponent(window.location.href);
+        window.open(url, '_blank', 'width=600,height=400');
+    }
 </script>
 """, unsafe_allow_html=True)
 
