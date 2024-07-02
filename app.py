@@ -131,6 +131,16 @@ def call_gemini_api(location, menu):
     json_str = extract_json(response.text)
     return json.loads(json_str) if json_str else None
 
+def get_share_urls(restaurant_name, location, menu):
+    base_url = "https://your-streamlit-app-url.com"  # 실제 앱 URL로 변경해야 함
+    text = urllib.parse.quote(f"도쿄 {location}의 {menu} 맛집 '{restaurant_name}'을 추천합니다!")
+    url = urllib.parse.quote(base_url)
+    return {
+        "instagram": f"https://www.instagram.com/"  # Instagram은 직접 공유 URL을 제공하지 않습니다
+        "twitter": f"https://twitter.com/intent/tweet?text={text}&url={url}",
+        "facebook": f"https://www.facebook.com/sharer/sharer.php?u={url}",
+    }
+
 # SNS 공유 관련 함수
 def create_popup_content(restaurant, location, menu):
     share_urls = get_share_urls(restaurant.get('name', 'Unknown'), location, menu)
@@ -153,14 +163,14 @@ def create_popup_content(restaurant, location, menu):
         <div style="text-align: center; margin-top: 15px;">
             <p style="color: #4a4a4a; margin-bottom: 10px;"><strong>SNS 공유</strong></p>
             <div style="display: flex; justify-content: center; align-items: center;">
+                <a href="#" onclick="alert('Instagram에 공유하려면 이 페이지의 URL을 복사하여 Instagram 앱에서 공유해주세요.'); return false;" style="color: #C13584; text-decoration: none; margin: 0 10px;">
+                    <img src="https://img.icons8.com/color/48/000000/instagram-new.png" width="40" height="40" alt="Instagram">
+                
                 <a href="{share_urls['twitter']}" target="_blank" style="color: #1DA1F2; text-decoration: none; margin: 0 10px;">
                     <img src="https://img.icons8.com/color/48/000000/twitter.png" width="40" height="40" alt="Twitter">
                 </a>
                 <a href="{share_urls['facebook']}" target="_blank" style="color: #4267B2; text-decoration: none; margin: 0 10px;">
                     <img src="https://img.icons8.com/color/48/000000/facebook-new.png" width="40" height="40" alt="Facebook">
-                </a>
-                <a href="#" onclick="alert('Instagram에 공유하려면 이 페이지의 URL을 복사하여 Instagram 앱에서 공유해주세요.'); return false;" style="color: #C13584; text-decoration: none; margin: 0 10px;">
-                    <img src="https://img.icons8.com/color/48/000000/instagram-new.png" width="40" height="40" alt="Instagram">
                 </a>
             </div>
         </div>
