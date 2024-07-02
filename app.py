@@ -279,9 +279,9 @@ if st.sidebar.button("맛집 검색", key="search_button"):
             st.subheader(f"{location}의 {menu} 맛집 지도")
             folium_static(m, width=800, height=500)
 
-            # 맛집 정보 표시
+            # 맛집 정보 표시 부분을 다음과 같이 수정합니다
             for idx, restaurant in enumerate(recommendations):
-                with st.expander(f"{restaurant.get('name', 'Unknown')}", key=f"restaurant_{idx}"):
+                with st.expander(f"{idx+1}. {restaurant.get('name', 'Unknown')}"):
                     st.write(f"평점: {restaurant.get('rating', 'N/A')}")
                     st.write(f"리뷰 수: {restaurant.get('reviews', 'N/A')}")
                     st.write(f"리뷰 요약: {restaurant.get('review_summary', 'N/A')}")
