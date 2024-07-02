@@ -240,10 +240,19 @@ def main():
                     iframe = folium.IFrame(html=popup_content, width=350, height=450)
                     popup = folium.Popup(iframe, max_width=350)
 
+                    tooltip_content = f"""
+                    <div style="font-size: 14px;">
+                    <b>{restaurant.get('name', 'Unknown')}</b><br>
+                    평점: {restaurant.get('rating', 'N/A')}<br>
+                    리뷰 수: {restaurant.get('reviews', 'N/A')}<br>
+                    가격대: {restaurant.get('price_range', 'N/A')}<br>
+                    </div>
+                    """
+
                     folium.Marker(
                         [restaurant_lat, restaurant_lon],
                         popup=popup,
-                        tooltip=restaurant.get('name', 'Unknown'),
+                        tooltip=folium.Tooltip(tooltip_content),
                         icon=folium.Icon(color='green', icon='cutlery', prefix='fa')
                     ).add_to(marker_cluster)
 

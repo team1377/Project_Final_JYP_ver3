@@ -222,4 +222,4 @@ if st.sidebar.checkbox("관리자 모드", key="admin_mode_checkbox"):
 
 # 푸터
 st.markdown("---")
-st.markdown("© 2024 도쿄 맛집 추천 서비스. All rights reserved.")
+st.markdown("© 2024 도쿄로컬맛집. All rights reserved.")

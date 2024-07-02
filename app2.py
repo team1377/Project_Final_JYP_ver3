@@ -261,4 +261,4 @@ if st.sidebar.button("맛집 검색", key="search_button"):
 
 # 푸터
 st.markdown("---")
-st.markdown("© 2024 도쿄 맛집 추천 서비스. All rights reserved.")
+st.markdown("© 2024 도쿄로컬맛집. All rights reserved.")
