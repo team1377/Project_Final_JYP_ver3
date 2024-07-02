@@ -60,43 +60,30 @@ st.markdown(
     unsafe_allow_html=True
 )
 
-# 제목과 로고 추가
-col1, col2 = st.columns([1, 4])
-with col1:
-    logo = Image.open('logo.png')  # 로고 이미지 파일 경로를 지정하세요
-    st.image(logo, width=369)
-
-# 앱 설명 (메인 영역으로 이동, 작은 폰트로 설정)
-st.markdown('<div class="small-font">  이 앱은 도쿄의 맛집을 추천해주는 서비스입니다.<br> '
-            '  원하는 지역과 메뉴를 선택한 후 \'OpenAI GPT\' 또는 \'Google Gemini\' AI모델을 선택하여 '
-            '  맛집 추천을 받으세요.</div>', unsafe_allow_html=True)
-
-# 사이드바 설정
-st.sidebar.header("검색 옵션")
-
-# 위치 선택
+# 위치와 메뉴 데이터 정의
 locations = {
-    "신주쿠": "shinjuku",
-    "시부야": "shibuya",
-    "긴자": "ginza",
-    "롯폰기": "roppongi",
-    "우에노": "ueno"
+    "신주쿠": "shinjuku", "시부야": "shibuya", "긴자": "ginza",
+    "롯폰기": "roppongi", "우에노": "ueno", "아사쿠사": "asakusa",
+    "아키하바라": "akihabara"
 }
 
-location = st.sidebar.selectbox("도쿄 내 관광지 선택", list(locations.keys()))
-
-# 메뉴 선택
 menus = {
-    "스시": "sushi",
-    "라멘": "ramen",
-    "야키토리": "yakitori",
-    "텐푸라": "tempura",
-    "우동": "udon"
+    "스시": "sushi", "라멘": "ramen", "야키토리": "yakitori",
+    "텐푸라": "tempura", "우동": "udon", "소바": "soba",
+    "돈카츠": "tonkatsu"
 }
-menu = st.sidebar.selectbox("도쿄 대표 메뉴 선택", list(menus.keys()))
 
-# API 선택
-api_choice = st.sidebar.radio("AI 모델 선택", ["OpenAI GPT", "Google Gemini"])
+latitudes = {
+    "신주쿠": 35.6938, "시부야": 35.6580, "긴자": 35.6721,
+    "롯폰기": 35.6628, "우에노": 35.7089, "아사쿠사": 35.7147,
+    "아키하바라": 35.7022
+}
+
+longitudes = {
+    "신주쿠": 139.7034, "시부야": 139.7016, "긴자": 139.7666,
+    "롯폰기": 139.7315, "우에노": 139.7741, "아사쿠사": 139.7967,
+    "아키하바라": 139.7741
+}
 
 def extract_json(text):
     match = re.search(r'\[.*\]', text, re.DOTALL)
@@ -115,7 +102,6 @@ def call_openai_api(location, menu):
     - 가게 정보 (주소, 전화번호, 영업시간, 가격대)
     - 추천 이유
  
-
     반드시 다음과 같은 유효한 JSON 형식으로 응답해주세요:
     [
       {{
@@ -166,7 +152,6 @@ def call_gemini_api(location, menu):
     - 가게 정보 (주소, 전화번호, 영업시간, 가격대)
     - 추천 이유
     
-
     반드시 다음과 같은 유효한 JSON 형식으로 응답해주세요:
     [
       {{
@@ -200,24 +185,47 @@ def call_gemini_api(location, menu):
         logging.error("응답에서 JSON을 찾을 수 없습니다.")
         return None
 
-# 검색 버튼
-if st.sidebar.button("맛집 검색"):
-    # 지도 표시
-    latitudes = {
-        "신주쿠": 35.6938,
-        "시부야": 35.6580,
-        "긴자": 35.6721,
-        "롯폰기": 35.6628,
-        "우에노": 35.7089
-    }
-    longitudes = {
-        "신주쿠": 139.7034,
-        "시부야": 139.7016,
-        "긴자": 139.7666,
-        "롯폰기": 139.7315,
-        "우에노": 139.7741
-    }
+# SNS 공유 버튼을 위한 HTML 추가
+def add_sns_buttons():
+    st.markdown("""
+    <div class="sns-share">
+        <a href="https://www.facebook.com/sharer/sharer.php?u=" target="_blank" class="facebook" id="facebook-share">
+            <i class="fab fa-facebook-f"></i>
+        </a>
+        <a href="https://twitter.com/intent/tweet?url=" target="_blank" class="twitter" id="twitter-share">
+            <i class="fab fa-twitter"></i>
+        </a>
+        <a href="https://www.instagram.com/" target="_blank" class="instagram" id="instagram-share">
+            <i class="fab fa-instagram"></i>
+        </a>
+    </div>
+    """, unsafe_allow_html=True)
 
+# 제목과 로고 추가
+col1, col2 = st.columns([1, 4])
+with col1:
+    logo = Image.open('logo.png')  # 로고 이미지 파일 경로를 지정하세요
+    st.image(logo, width=369)
+
+# 앱 설명 (메인 영역으로 이동, 작은 폰트로 설정)
+st.markdown('<div class="small-font">  이 앱은 도쿄의 맛집을 추천해주는 서비스입니다.<br> '
+            '  원하는 지역과 메뉴를 선택한 후 \'OpenAI GPT\' 또는 \'Google Gemini\' AI모델을 선택하여 '
+            '  맛집 추천을 받으세요.</div>', unsafe_allow_html=True)
+
+# 사이드바 설정
+st.sidebar.header("검색 옵션")
+
+# 위치 선택
+location = st.sidebar.selectbox("도쿄 내 관광지 선택", list(locations.keys()), key="location_select")
+
+# 메뉴 선택
+menu = st.sidebar.selectbox("도쿄 대표 메뉴 선택", list(menus.keys()), key="menu_select")
+
+# API 선택
+api_choice = st.sidebar.radio("AI 모델 선택", ["OpenAI GPT", "Google Gemini"], key="api_choice_radio")
+
+# 검색 버튼
+if st.sidebar.button("맛집 검색", key="search_button"):
     lat, lon = latitudes[location], longitudes[location]
 
     m = folium.Map(location=[lat, lon], zoom_start=15)
@@ -235,11 +243,9 @@ if st.sidebar.button("맛집 검색"):
             st.error("맛집 정보를 가져오는 데 실패했습니다. 다시 시도해 주세요.")
         elif isinstance(recommendations, list):
             for idx, restaurant in enumerate(recommendations):
-                # 임의의 위치 생성 (실제로는 각 맛집의 정확한 위치를 사용해야 합니다)
                 restaurant_lat = lat + random.uniform(-0.005, 0.005)
                 restaurant_lon = lon + random.uniform(-0.005, 0.005)
                 
-                # 툴팁 내용 생성 (마우스 오버 시 표시될 정보)
                 tooltip_content = f"""
                 <div style="font-size: 14px;">
                 <b>{restaurant.get('name', 'Unknown')}</b><br>
@@ -249,7 +255,6 @@ if st.sidebar.button("맛집 검색"):
                 </div>
                 """
 
-                # 팝업 내용 생성 (클릭 시 표시될 상세 정보)
                 popup_content = f"""
                 <div style="font-size: 16px;">
                 <b>{restaurant.get('name', 'Unknown')}</b><br>
@@ -264,7 +269,6 @@ if st.sidebar.button("맛집 검색"):
                 </div>
                 """
 
-                # 지도에 맛집 위치 표시
                 folium.Marker(
                     [restaurant_lat, restaurant_lon],
                     popup=folium.Popup(popup_content, max_width=300),
@@ -272,31 +276,28 @@ if st.sidebar.button("맛집 검색"):
                     icon=folium.Icon(color='green', icon='cutlery', prefix='fa')
                 ).add_to(m)
 
+            st.subheader(f"{location}의 {menu} 맛집 지도")
+            folium_static(m, width=800, height=500)
+
+            # 맛집 정보 표시
+            for idx, restaurant in enumerate(recommendations):
+                with st.expander(f"{restaurant.get('name', 'Unknown')}", key=f"restaurant_{idx}"):
+                    st.write(f"평점: {restaurant.get('rating', 'N/A')}")
+                    st.write(f"리뷰 수: {restaurant.get('reviews', 'N/A')}")
+                    st.write(f"리뷰 요약: {restaurant.get('review_summary', 'N/A')}")
+                    st.write(f"주소: {restaurant.get('address', 'N/A')}")
+                    st.write(f"전화번호: {restaurant.get('phone', 'N/A')}")
+                    st.write(f"영업시간: {restaurant.get('hours', 'N/A')}")
+                    st.write(f"가격대: {restaurant.get('price_range', 'N/A')}")
+                    st.write(f"추천 이유: {restaurant.get('reason', 'N/A')}")
+
+            # SNS 공유 버튼 추가
+            add_sns_buttons()
+
         else:
             st.error("예상치 못한 응답 형식입니다. 다시 시도해 주세요.")
     except Exception as e:
         st.error(f"오류 발생: {str(e)}")
-
-    # 지도 표시
-    st.subheader(f"{location}의 {menu} 맛집 지도")
-    folium_static(m, width=800, height=500)
-
-
-# SNS 공유 버튼을 위한 HTML 추가
-def add_sns_buttons():
-    st.markdown("""
-    <div class="sns-share">
-        <a href="https://www.facebook.com/sharer/sharer.php?u=" target="_blank" class="facebook">
-            <i class="fab fa-facebook-f"></i>
-        </a>
-        <a href="https://twitter.com/intent/tweet?url=" target="_blank" class="twitter">
-            <i class="fab fa-twitter"></i>
-        </a>
-        <a href="https://www.instagram.com/" target="_blank" class="instagram">
-            <i class="fab fa-instagram"></i>
-        </a>
-    </div>
-    """, unsafe_allow_html=True)
 
 # CSS 스타일 추가
 st.markdown("""
@@ -367,24 +368,11 @@ st.markdown("""
 </style>
 """, unsafe_allow_html=True)
 
-# 메인 코드 부분...
-
-# 결과 표시 후 SNS 공유 버튼 추가
-if st.sidebar.button("맛집 검색"):
-    # 기존의 결과 표시 코드...
-    
-    # SNS 공유 버튼 추가
-    add_sns_buttons()
-
-# JavaScript 추가 (필요한 경우)
+# JavaScript 추가
 st.markdown("""
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
 <script>
     $(document).ready(function() {
-        // 여기에 필요한 JavaScript 코드를 추가할 수 있습니다.
-        // 예: SNS 공유 기능 개선, 동적 콘텐츠 로딩 등
-        
-        // SNS 공유 버튼 클릭 이벤트 처리
         $('.sns-share a').click(function(e) {
             e.preventDefault();
             var url = $(this).attr('href');
@@ -396,7 +384,6 @@ st.markdown("""
             } else if (url.includes('twitter')) {
                 url += 'text=' + title + '&url=' + shareUrl;
             } else if (url.includes('instagram')) {
-                // Instagram doesn't support direct sharing via URL
                 alert('Instagram sharing is not supported. Please copy the link manually.');
                 return;
             }
@@ -406,3 +393,7 @@ st.markdown("""
     });
 </script>
 """, unsafe_allow_html=True)
+
+# 푸터
+st.markdown("---")
+st.markdown("© 2024 도쿄 맛집 추천 서비스. All rights reserved.")
