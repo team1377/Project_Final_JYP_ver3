@@ -210,7 +210,7 @@ def main():
 
     # 앱 설명
     st.markdown('<div class="small-font">이 앱은 도쿄의 맛집을 추천해주는 서비스입니다.<br>'
-                '원하는 지역과 메뉴를 선택한 후 \'OpenAI GPT\' 또는 \'Google Gemini\' AI모델을 선택하여'
+                '도쿄 관광지와 메뉴를 선택한 후 \'OpenAI GPT\' 또는 \'Google Gemini\' AI 모델을 선택하여 ' 
                 '맛집 추천을 받으세요.</div>', unsafe_allow_html=True)
 
     # 사이드바 설정
