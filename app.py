@@ -230,8 +230,7 @@ if st.sidebar.button("맛집 검색", key="search_button"):
                 restaurant_lat = lat + random.uniform(-0.005, 0.005)
                 restaurant_lon = lon + random.uniform(-0.005, 0.005)
                 
-                # 팝업 내용 생성 (클릭 시 표시될 상세 정보)
-                popup_content = f"""
+popup_content = f"""
 <div style="font-size: 16px; width: 300px;">
     <h3>{restaurant.get('name', 'Unknown')}</h3>
     <p>평점: {restaurant.get('rating', 'N/A')} (리뷰 {restaurant.get('reviews', 'N/A')}개)</p>
@@ -248,6 +247,9 @@ if st.sidebar.button("맛집 검색", key="search_button"):
         </a>
         <a href="#" class="twitter" onclick="shareOnTwitter('{restaurant.get('name', 'Unknown')}'); return false;">
             <i class="fab fa-twitter"></i>
+        </a>
+        <a href="#" class="instagram" onclick="shareOnInstagram('{restaurant.get('name', 'Unknown')}'); return false;">
+            <i class="fab fa-instagram"></i>
         </a>
     </div>
 </div>
@@ -300,10 +302,16 @@ st.markdown("""
     
     .facebook { background-color: #3b5998; }
     .twitter { background-color: #1da1f2; }
+    .instagram { 
+        background: #f09433; 
+        background: -moz-linear-gradient(45deg, #f09433 0%, #e6683c 25%, #dc2743 50%, #cc2366 75%, #bc1888 100%); 
+        background: -webkit-linear-gradient(45deg, #f09433 0%,#e6683c 25%,#dc2743 50%,#cc2366 75%,#bc1888 100%); 
+        background: linear-gradient(45deg, #f09433 0%,#e6683c 25%,#dc2743 50%,#cc2366 75%,#bc1888 100%); 
+    }
 </style>
 """, unsafe_allow_html=True)
 
-# JavaScript 추가
+# JavaScript 코드를 수정합니다
 st.markdown("""
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
 <script>
@@ -316,6 +324,15 @@ st.markdown("""
         var text = encodeURIComponent(restaurantName + ' - 도쿄 맛집 추천');
         var url = 'https://twitter.com/intent/tweet?text=' + text + '&url=' + encodeURIComponent(window.location.href);
         window.open(url, '_blank', 'width=600,height=400');
+    }
+
+    function shareOnInstagram(restaurantName) {
+        var text = restaurantName + ' - 도쿄 맛집 추천\\n' + window.location.href;
+        navigator.clipboard.writeText(text).then(function() {
+            alert('인스타그램에 공유할 텍스트가 클립보드에 복사되었습니다. 인스타그램 앱에 붙여넣기 해주세요.');
+        }, function(err) {
+            console.error('클립보드 복사 실패: ', err);
+        });
     }
 </script>
 """, unsafe_allow_html=True)
