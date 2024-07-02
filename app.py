@@ -185,22 +185,6 @@ def call_gemini_api(location, menu):
         logging.error("응답에서 JSON을 찾을 수 없습니다.")
         return None
 
-# SNS 공유 버튼을 위한 HTML 추가
-def add_sns_buttons():
-    st.markdown("""
-    <div class="sns-share">
-        <a href="https://www.facebook.com/sharer/sharer.php?u=" target="_blank" class="facebook" id="facebook-share">
-            <i class="fab fa-facebook-f"></i>
-        </a>
-        <a href="https://twitter.com/intent/tweet?url=" target="_blank" class="twitter" id="twitter-share">
-            <i class="fab fa-twitter"></i>
-        </a>
-        <a href="https://www.instagram.com/" target="_blank" class="instagram" id="instagram-share">
-            <i class="fab fa-instagram"></i>
-        </a>
-    </div>
-    """, unsafe_allow_html=True)
-
 # 제목과 로고 추가
 col1, col2 = st.columns([1, 4])
 with col1:
@@ -246,53 +230,38 @@ if st.sidebar.button("맛집 검색", key="search_button"):
                 restaurant_lat = lat + random.uniform(-0.005, 0.005)
                 restaurant_lon = lon + random.uniform(-0.005, 0.005)
                 
-                tooltip_content = f"""
-                <div style="font-size: 14px;">
-                <b>{restaurant.get('name', 'Unknown')}</b><br>
-                평점: {restaurant.get('rating', 'N/A')}<br>
-                리뷰 수: {restaurant.get('reviews', 'N/A')}<br>
-                가격대: {restaurant.get('price_range', 'N/A')}<br>
-                </div>
-                """
-
+                # 팝업 내용 생성 (클릭 시 표시될 상세 정보)
                 popup_content = f"""
-                <div style="font-size: 16px;">
-                <b>{restaurant.get('name', 'Unknown')}</b><br>
-                평점: {restaurant.get('rating', 'N/A')}<br>
-                리뷰 수: {restaurant.get('reviews', 'N/A')}<br>
-                리뷰 요약: {restaurant.get('review_summary', 'N/A')}<br>
-                주소: {restaurant.get('address', 'N/A')}<br>
-                전화번호: {restaurant.get('phone', 'N/A')}<br>
-                영업시간: {restaurant.get('hours', 'N/A')}<br>
-                가격대: {restaurant.get('price_range', 'N/A')}<br>
-                추천 이유: {restaurant.get('reason', 'N/A')}
+                <div style="font-size: 16px; width: 300px;">
+                    <h3>{restaurant.get('name', 'Unknown')}</h3>
+                    <p>평점: {restaurant.get('rating', 'N/A')} (리뷰 {restaurant.get('reviews', 'N/A')}개)</p>
+                    <p>리뷰 요약: {restaurant.get('review_summary', 'N/A')}</p>
+                    <p>주소: {restaurant.get('address', 'N/A')}</p>
+                    <p>전화번호: {restaurant.get('phone', 'N/A')}</p>
+                    <p>영업시간: {restaurant.get('hours', 'N/A')}</p>
+                    <p>가격대: {restaurant.get('price_range', 'N/A')}</p>
+                    <p>추천 이유: {restaurant.get('reason', 'N/A')}</p>
+                    <p><a href="https://tabelog.com/tokyo/" target="_blank">식당 정보 출처: 타베로그</a></p>
+                    <div class="sns-share">
+                        <a href="https://www.facebook.com/sharer/sharer.php?u=https://tabelog.com/tokyo/" target="_blank" class="facebook">
+                            <i class="fab fa-facebook-f"></i> Facebook에서 공유
+                        </a>
+                        <a href="https://twitter.com/intent/tweet?url=https://tabelog.com/tokyo/&text={restaurant.get('name', 'Unknown')} - 도쿄 맛집 추천" target="_blank" class="twitter">
+                            <i class="fab fa-twitter"></i> Twitter에서 공유
+                        </a>
+                    </div>
                 </div>
                 """
 
                 folium.Marker(
                     [restaurant_lat, restaurant_lon],
-                    popup=folium.Popup(popup_content, max_width=300),
-                    tooltip=folium.Tooltip(tooltip_content),
+                    popup=folium.Popup(popup_content, max_width=350),
+                    tooltip=restaurant.get('name', 'Unknown'),
                     icon=folium.Icon(color='green', icon='cutlery', prefix='fa')
                 ).add_to(m)
 
             st.subheader(f"{location}의 {menu} 맛집 지도")
             folium_static(m, width=800, height=500)
-
-            # 맛집 정보 표시 부분을 다음과 같이 수정합니다
-            for idx, restaurant in enumerate(recommendations):
-                with st.expander(f"{idx+1}. {restaurant.get('name', 'Unknown')}"):
-                    st.write(f"평점: {restaurant.get('rating', 'N/A')}")
-                    st.write(f"리뷰 수: {restaurant.get('reviews', 'N/A')}")
-                    st.write(f"리뷰 요약: {restaurant.get('review_summary', 'N/A')}")
-                    st.write(f"주소: {restaurant.get('address', 'N/A')}")
-                    st.write(f"전화번호: {restaurant.get('phone', 'N/A')}")
-                    st.write(f"영업시간: {restaurant.get('hours', 'N/A')}")
-                    st.write(f"가격대: {restaurant.get('price_range', 'N/A')}")
-                    st.write(f"추천 이유: {restaurant.get('reason', 'N/A')}")
-
-            # SNS 공유 버튼 추가
-            add_sns_buttons()
 
         else:
             st.error("예상치 못한 응답 형식입니다. 다시 시도해 주세요.")
@@ -322,30 +291,27 @@ st.markdown("""
     
     .sns-share {
         display: flex;
-        justify-content: center;
-        margin-top: 20px;
+        flex-direction: column;
+        align-items: flex-start;
+        margin-top: 10px;
     }
     
     .sns-share a {
-        margin: 0 10px;
-        width: 40px;
-        height: 40px;
-        border-radius: 50%;
-        display: flex;
-        align-items: center;
-        justify-content: center;
+        margin: 5px 0;
+        padding: 5px 10px;
+        border-radius: 5px;
         color: white;
         text-decoration: none;
         transition: all 0.3s ease;
+        font-size: 14px;
     }
     
     .sns-share a:hover {
-        transform: scale(1.1);
+        opacity: 0.8;
     }
     
     .facebook { background-color: #3b5998; }
     .twitter { background-color: #1da1f2; }
-    .instagram { background-color: #e1306c; }
     
     .stButton>button {
         background-color: #4CAF50;
@@ -373,27 +339,12 @@ st.markdown("""
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
 <script>
     $(document).ready(function() {
-        $('.sns-share a').click(function(e) {
-            e.preventDefault();
-            var url = $(this).attr('href');
-            var shareUrl = encodeURIComponent(window.location.href);
-            var title = encodeURIComponent(document.title);
-            
-            if (url.includes('facebook')) {
-                url += shareUrl;
-            } else if (url.includes('twitter')) {
-                url += 'text=' + title + '&url=' + shareUrl;
-            } else if (url.includes('instagram')) {
-                alert('Instagram sharing is not supported. Please copy the link manually.');
-                return;
-            }
-            
-            window.open(url, '_blank', 'width=600,height=400');
-        });
+        // 여기에 필요한 JavaScript 코드를 추가할 수 있습니다.
+        // 예: SNS 공유 기능 개선, 동적 콘텐츠 로딩 등
     });
 </script>
 """, unsafe_allow_html=True)
 
 # 푸터
 st.markdown("---")
-st.markdown("© 2024 도쿄 맛집 추천 서비스. All rights reserved.")
+st.markdown("© 2024 도쿄로컬맛집. All rights reserved.")
