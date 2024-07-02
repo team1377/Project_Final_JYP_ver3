@@ -72,7 +72,7 @@ def call_openai_api(location, menu):
     - 가게 리뷰 요약
     - 상세 정보 (특징, 추천 메뉴 등)
     - 가게 정보 (주소, 전화번호, 영업시간, 가격대)
-    - 추천 이유
+    - 가게 웹사이트 URL (없는 경우 "https://tabelog.com/tokyo/"로 설정)
     반드시 다음과 같은 유효한 JSON 형식으로 응답해주세요:
     [
       {{
@@ -85,7 +85,7 @@ def call_openai_api(location, menu):
         "phone": "전화번호",
         "hours": "영업시간",
         "price_range": "가격대",
-        "reason": "추천 이유"
+        "website": "https://restaurant-website.com"
       }},
       ...
     ]
@@ -109,7 +109,7 @@ def call_gemini_api(location, menu):
     - 가게 리뷰 요약
     - 상세 정보 (특징, 추천 메뉴 등)
     - 가게 정보 (주소, 전화번호, 영업시간, 가격대)
-    - 추천 이유
+    - 가게 웹사이트 URL (없는 경우 "https://tabelog.com/tokyo/"로 설정)
     반드시 다음과 같은 유효한 JSON 형식으로 응답해주세요:
     [
       {{
@@ -122,7 +122,7 @@ def call_gemini_api(location, menu):
         "phone": "전화번호",
         "hours": "영업시간",
         "price_range": "가격대",
-        "reason": "추천 이유"
+        "website": "https://restaurant-website.com"
       }},
       ...
     ]
@@ -157,9 +157,8 @@ def create_popup_content(restaurant, location, menu):
         <p style="color: #4a4a4a; margin-bottom: 5px;"><strong>전화번호:</strong> {restaurant.get('phone', 'N/A')}</p>
         <p style="color: #4a4a4a; margin-bottom: 5px;"><strong>영업시간:</strong> {restaurant.get('hours', 'N/A')}</p>
         <p style="color: #4a4a4a; margin-bottom: 5px;"><strong>가격대:</strong> {restaurant.get('price_range', 'N/A')}</p>
-        <p style="color: #4a4a4a; margin-bottom: 10px;"><strong>추천 이유:</strong> {restaurant.get('reason', 'N/A')}</p>
         <p style="margin-bottom: 10px;">
-            <a href="https://tabelog.com/tokyo/rstLst/" target="_blank" style="color: #007bff; text-decoration: none;">음식점 사이트 방문</a>
+            <a href="{restaurant.get('website', 'https://tabelog.com/tokyo/')}" target="_blank" style="color: #007bff; text-decoration: none;">음식점 사이트 방문</a>
         </p>
         <div style="display: flex; justify-content: space-between; margin-top: 10px;">
             <a href="{share_urls['twitter']}" target="_blank" style="color: #1DA1F2; text-decoration: none;">
