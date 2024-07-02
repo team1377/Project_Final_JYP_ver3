@@ -132,16 +132,6 @@ def call_gemini_api(location, menu):
     return json.loads(json_str) if json_str else None
 
 # SNS 공유 관련 함수
-def get_share_urls(restaurant_name, location, menu):
-    base_url = "https://your-streamlit-app-url.com"  # 실제 앱 URL로 변경해야 함
-    text = urllib.parse.quote(f"도쿄 {location}의 {menu} 맛집 '{restaurant_name}'을 추천합니다!")
-    url = urllib.parse.quote(base_url)
-    return {
-        "twitter": f"https://twitter.com/intent/tweet?text={text}&url={url}",
-        "facebook": f"https://www.facebook.com/sharer/sharer.php?u={url}",
-        "instagram": f"https://www.instagram.com/"
-    }
-
 def create_popup_content(restaurant, location, menu):
     share_urls = get_share_urls(restaurant.get('name', 'Unknown'), location, menu)
     return f"""
@@ -158,18 +148,21 @@ def create_popup_content(restaurant, location, menu):
         <p style="color: #4a4a4a; margin-bottom: 5px;"><strong>영업시간:</strong> {restaurant.get('hours', 'N/A')}</p>
         <p style="color: #4a4a4a; margin-bottom: 5px;"><strong>가격대:</strong> {restaurant.get('price_range', 'N/A')}</p>
         <p style="margin-bottom: 15px;">
-            <a href="{restaurant.get('website', 'https://tabelog.com/tokyo/')}" target="_blank" style="color: #007bff; text-decoration: none;">음식점 사이트 방문</a>
+            <a href="{restaurant.get('website', 'https://tabelog.com/tokyo/')}" target="_blank" style="color: #007bff; text-decoration: none;">로컬 사이트 방문</a>
         </p>
-        <div style="display: flex; justify-content: center; align-items: center; margin-top: 15px;">
-            <a href="{share_urls['twitter']}" target="_blank" style="color: #1DA1F2; text-decoration: none; margin: 0 10px;">
-                <img src="https://img.icons8.com/color/48/000000/twitter.png" width="40" height="40" alt="Twitter">
-            </a>
-            <a href="{share_urls['facebook']}" target="_blank" style="color: #4267B2; text-decoration: none; margin: 0 10px;">
-                <img src="https://img.icons8.com/color/48/000000/facebook-new.png" width="40" height="40" alt="Facebook">
-            </a>
-            <a href="#" onclick="alert('Instagram에 공유하려면 이 페이지의 URL을 복사하여 Instagram 앱에서 공유해주세요.'); return false;" style="color: #C13584; text-decoration: none; margin: 0 10px;">
-                <img src="https://img.icons8.com/color/48/000000/instagram-new.png" width="40" height="40" alt="Instagram">
-            </a>
+        <div style="text-align: center; margin-top: 15px;">
+            <p style="color: #4a4a4a; margin-bottom: 10px;"><strong>SNS 공유</strong></p>
+            <div style="display: flex; justify-content: center; align-items: center;">
+                <a href="{share_urls['twitter']}" target="_blank" style="color: #1DA1F2; text-decoration: none; margin: 0 10px;">
+                    <img src="https://img.icons8.com/color/48/000000/twitter.png" width="40" height="40" alt="Twitter">
+                </a>
+                <a href="{share_urls['facebook']}" target="_blank" style="color: #4267B2; text-decoration: none; margin: 0 10px;">
+                    <img src="https://img.icons8.com/color/48/000000/facebook-new.png" width="40" height="40" alt="Facebook">
+                </a>
+                <a href="#" onclick="alert('Instagram에 공유하려면 이 페이지의 URL을 복사하여 Instagram 앱에서 공유해주세요.'); return false;" style="color: #C13584; text-decoration: none; margin: 0 10px;">
+                    <img src="https://img.icons8.com/color/48/000000/instagram-new.png" width="40" height="40" alt="Instagram">
+                </a>
+            </div>
         </div>
     </div>
     """
