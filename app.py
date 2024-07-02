@@ -165,7 +165,7 @@ def create_popup_content(restaurant, location, menu):
             <div style="display: flex; justify-content: center; align-items: center;">
                 <a href="#" onclick="alert('Instagram에 공유하려면 이 페이지의 URL을 복사하여 Instagram 앱에서 공유해주세요.'); return false;" style="color: #C13584; text-decoration: none; margin: 0 10px;">
                     <img src="https://img.icons8.com/color/48/000000/instagram-new.png" width="40" height="40" alt="Instagram">
-                
+                </a>
                 <a href="{share_urls['twitter']}" target="_blank" style="color: #1DA1F2; text-decoration: none; margin: 0 10px;">
                     <img src="https://img.icons8.com/color/48/000000/twitter.png" width="40" height="40" alt="Twitter">
                 </a>
